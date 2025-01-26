@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/impression")
 @RequiredArgsConstructor
-@CrossOrigin("*")
 public class TrackImpressionController {
 
     private final TrackImpressionService trackImpressionService;

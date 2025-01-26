@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/engagement")
 @RequiredArgsConstructor
-@CrossOrigin("*")
 public class TrackEngagementController {
 
     private final TrackEngagementService trackEngagementService;
