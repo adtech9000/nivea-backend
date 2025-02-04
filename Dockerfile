@@ -1,15 +1,6 @@
-FROM openjdk:17
-
-WORKDIR /app
-
-COPY .mvn/ .mvn
-COPY mvnw pom.xml ./
-
-RUN chmod +x mvnw
-RUN ./mvnw dependency:resolve
-
-COPY src ./src
-
+FROM openjdk:oracle
+RUN rm -f /etc/localtime
+RUN ln -s /usr/share/zoneinfo/Africa/Lagos /etc/localtime
+COPY target/*.jar /opt/app.jar
 EXPOSE 8080
-
-CMD ["./mvnw", "spring-boot:run"]
+CMD ["java", "-Xms256m", "-Xms256m", "-jar", "/opt/app.jar"]
