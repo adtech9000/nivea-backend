@@ -1,6 +1,5 @@
-FROM openjdk:oracle
-RUN rm -f /etc/localtime
-RUN ln -s /usr/share/zoneinfo/Africa/Lagos /etc/localtime
-COPY target/*.jar /opt/app.jar
+FROM eclipse-temurin:17-jdk-alpine
+WORKDIR /app
+COPY target/*.jar app.jar
 EXPOSE 8080
-CMD ["java", "-Xms256m", "-Xms256m", "-jar", "/opt/app.jar"]
+ENTRYPOINT ["java", "-jar", "app.jar"]
