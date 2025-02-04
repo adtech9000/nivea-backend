@@ -1,5 +1,5 @@
 # Stage 1: Build the Java application using Maven
-FROM maven:3.9.2-eclipse-temurin-21 AS build
+FROM maven:3.9.2-eclipse-temurin AS build
 WORKDIR /app
 
 # Copy the pom.xml first to leverage Docker caching
