@@ -15,6 +15,7 @@ import static com.nivea_be.nivea_ad.constants.TrackConstants.*;
 @RestController
 @RequestMapping("/api/engagement")
 @RequiredArgsConstructor
+@CrossOrigin("*")
 public class TrackDailyEngagementController {
 
     private final TrackDailyEngagementService trackDailyEngagementService;
