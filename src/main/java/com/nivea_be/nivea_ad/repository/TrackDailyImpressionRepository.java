@@ -1,11 +1,11 @@
 package com.nivea_be.nivea_ad.repository;
 
 
-import com.nivea_be.nivea_ad.entity.TrackImpression;
+import com.nivea_be.nivea_ad.entity.TrackDailyImpression;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface TrackImpressionRepository extends MongoRepository<TrackImpression, String> {
+public interface TrackDailyImpressionRepository extends MongoRepository<TrackDailyImpression, String> {
 
 }
