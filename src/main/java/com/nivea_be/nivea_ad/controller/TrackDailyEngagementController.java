@@ -13,7 +13,7 @@ import static com.nivea_be.nivea_ad.constants.TrackConstants.*;
  * REST Controller for tracking daily engagements (yes/no).
  */
 @RestController
-@RequestMapping("/api/engagement")
+@RequestMapping("api/engagement")
 @RequiredArgsConstructor
 public class TrackDailyEngagementController {
 
