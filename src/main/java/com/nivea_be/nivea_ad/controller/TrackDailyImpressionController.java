@@ -12,9 +12,8 @@ import static com.nivea_be.nivea_ad.constants.TrackConstants.IMPRESSION_INCREMEN
  * REST Controller for tracking impressions.
  */
 @RestController
-@RequestMapping("/api/impression")
+@RequestMapping("api/impression")
 @RequiredArgsConstructor
-@CrossOrigin("*")
 public class TrackDailyImpressionController {
 
 

@@ -12,13 +12,12 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/users")
-@CrossOrigin("*")
+@RequestMapping("api/users")
 public class UserController {
 
     private final UserService userService;
 
-    @PostMapping("/login")
+    @PostMapping("login")
     public ResponseEntity<ApiResponse<UserDTO>> login(@RequestParam String username, @RequestParam String password) {
         ApiResponse<UserDTO> response = userService.login(username, password);
         return response.isSuccess() ? ResponseEntity.ok(response) : ResponseEntity.badRequest().body(response);
