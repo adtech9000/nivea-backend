@@ -1,4 +1,4 @@
-package com.nivea_be.nivea_ad;
+package com.nivea_be.nivea_ad.utils;
 
 import com.nivea_be.nivea_ad.enums.DimensionType;
 import com.nivea_be.nivea_ad.entity.TrackDailyEngagement;
