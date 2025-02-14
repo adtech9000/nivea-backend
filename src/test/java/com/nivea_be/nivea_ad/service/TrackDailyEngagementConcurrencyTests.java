@@ -1,5 +1,6 @@
 package com.nivea_be.nivea_ad.service;
 
+import com.nivea_be.nivea_ad.enums.DimensionType;
 import com.nivea_be.nivea_ad.entity.TrackDailyEngagement;
 import com.nivea_be.nivea_ad.entity.TrackDailyImpression;
 import com.nivea_be.nivea_ad.exception.EngagementDocumentNotFoundException;
@@ -40,6 +41,7 @@ class TrackDailyEngagementConcurrencyTests {
 
     private String engagementDocId;
     private String impressionDocId;
+    private final DimensionType testDimension = DimensionType.DIMENSION_320_480; // ✅ Test using a specific dimension
 
     @BeforeEach
     void setup() {
@@ -47,15 +49,16 @@ class TrackDailyEngagementConcurrencyTests {
         trackDailyEngagementRepository.deleteAll();
         trackDailyImpressionRepository.deleteAll();
 
-        // Generate today's IDs using UTC
+        // Generate today's IDs using UTC + Dimension
         String today = ZonedDateTime.now(TIMEZONE).format(DATE_FORMATTER);
-        engagementDocId = "engagement_" + today;
-        impressionDocId = "impression_" + today;
+        engagementDocId = "engagement_" + today + "_" + testDimension.getValue();
+        impressionDocId = "impression_" + today + "_" + testDimension.getValue();
 
         // Create today's daily engagement doc
         TrackDailyEngagement dailyEngagement = new TrackDailyEngagement();
         dailyEngagement.setId(engagementDocId);
         dailyEngagement.setDate(ZonedDateTime.now(TIMEZONE).toLocalDate());
+        dailyEngagement.setDimension(testDimension);
         dailyEngagement.setYesCount(0);
         dailyEngagement.setNoCount(0);
         trackDailyEngagementRepository.save(dailyEngagement);
@@ -64,6 +67,7 @@ class TrackDailyEngagementConcurrencyTests {
         TrackDailyImpression dailyImpression = new TrackDailyImpression();
         dailyImpression.setId(impressionDocId);
         dailyImpression.setDate(ZonedDateTime.now(TIMEZONE).toLocalDate());
+        dailyImpression.setDimension(testDimension);
         dailyImpression.setImpressionCount(0);
         trackDailyImpressionRepository.save(dailyImpression);
     }
@@ -74,13 +78,13 @@ class TrackDailyEngagementConcurrencyTests {
         ExecutorService executorService = Executors.newFixedThreadPool(10);
 
         for (int i = 0; i < numberOfThreads; i++) {
-            executorService.submit(() -> trackDailyEngagementService.incrementYesToday());
+            executorService.submit(() -> trackDailyEngagementService.incrementYesToday(testDimension));
         }
 
         executorService.shutdown();
         assertTrue(executorService.awaitTermination(1, TimeUnit.MINUTES));
 
-        TrackDailyEngagement engagement = trackDailyEngagementService.getTodayEngagement();
+        TrackDailyEngagement engagement = trackDailyEngagementService.getTodayEngagement(testDimension);
         assertNotNull(engagement);
         assertEquals(numberOfThreads, engagement.getYesCount());
         assertEquals(0, engagement.getNoCount());
@@ -92,13 +96,13 @@ class TrackDailyEngagementConcurrencyTests {
         ExecutorService executorService = Executors.newFixedThreadPool(10);
 
         for (int i = 0; i < numberOfThreads; i++) {
-            executorService.submit(() -> trackDailyEngagementService.incrementNoToday());
+            executorService.submit(() -> trackDailyEngagementService.incrementNoToday(testDimension));
         }
 
         executorService.shutdown();
         assertTrue(executorService.awaitTermination(1, TimeUnit.MINUTES));
 
-        TrackDailyEngagement engagement = trackDailyEngagementService.getTodayEngagement();
+        TrackDailyEngagement engagement = trackDailyEngagementService.getTodayEngagement(testDimension);
         assertNotNull(engagement);
         assertEquals(0, engagement.getYesCount());
         assertEquals(numberOfThreads, engagement.getNoCount());
@@ -110,13 +114,13 @@ class TrackDailyEngagementConcurrencyTests {
         ExecutorService executorService = Executors.newFixedThreadPool(10);
 
         for (int i = 0; i < numberOfThreads; i++) {
-            executorService.submit(() -> trackDailyImpressionService.incrementImpressionToday());
+            executorService.submit(() -> trackDailyImpressionService.incrementImpressionToday(testDimension));
         }
 
         executorService.shutdown();
         assertTrue(executorService.awaitTermination(1, TimeUnit.MINUTES));
 
-        TrackDailyImpression impression = trackDailyImpressionService.getTodayImpression();
+        TrackDailyImpression impression = trackDailyImpressionService.getTodayImpression(testDimension);
         assertNotNull(impression);
         assertEquals(numberOfThreads, impression.getImpressionCount());
     }
@@ -127,16 +131,16 @@ class TrackDailyEngagementConcurrencyTests {
         ExecutorService executorService = Executors.newFixedThreadPool(20);
 
         for (int i = 0; i < numberOfThreads; i++) {
-            executorService.submit(() -> trackDailyEngagementService.incrementYesToday());
-            executorService.submit(() -> trackDailyEngagementService.incrementNoToday());
-            executorService.submit(() -> trackDailyImpressionService.incrementImpressionToday());
+            executorService.submit(() -> trackDailyEngagementService.incrementYesToday(testDimension));
+            executorService.submit(() -> trackDailyEngagementService.incrementNoToday(testDimension));
+            executorService.submit(() -> trackDailyImpressionService.incrementImpressionToday(testDimension));
         }
 
         executorService.shutdown();
         assertTrue(executorService.awaitTermination(1, TimeUnit.MINUTES));
 
-        TrackDailyEngagement engagement = trackDailyEngagementService.getTodayEngagement();
-        TrackDailyImpression impression = trackDailyImpressionService.getTodayImpression();
+        TrackDailyEngagement engagement = trackDailyEngagementService.getTodayEngagement(testDimension);
+        TrackDailyImpression impression = trackDailyImpressionService.getTodayImpression(testDimension);
 
         assertNotNull(engagement);
         assertEquals(numberOfThreads, engagement.getYesCount());
@@ -152,7 +156,7 @@ class TrackDailyEngagementConcurrencyTests {
 
         EngagementDocumentNotFoundException ex = assertThrows(
                 EngagementDocumentNotFoundException.class,
-                () -> trackDailyEngagementService.incrementYesToday()
+                () -> trackDailyEngagementService.incrementYesToday(testDimension)
         );
 
         assertEquals("Daily engagement document not found for today: " + engagementDocId, ex.getMessage());
@@ -164,7 +168,7 @@ class TrackDailyEngagementConcurrencyTests {
 
         ImpressionDocumentNotFoundException ex = assertThrows(
                 ImpressionDocumentNotFoundException.class,
-                () -> trackDailyImpressionService.incrementImpressionToday()
+                () -> trackDailyImpressionService.incrementImpressionToday(testDimension)
         );
 
         assertEquals("Daily impression document not found for today: " + impressionDocId, ex.getMessage());

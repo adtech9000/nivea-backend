@@ -1,5 +1,6 @@
 package com.nivea_be.nivea_ad.service;
 
+import com.nivea_be.nivea_ad.enums.DimensionType;
 import com.nivea_be.nivea_ad.entity.TrackDailyEngagement;
 import com.nivea_be.nivea_ad.exception.EngagementDocumentNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -10,7 +11,6 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
@@ -25,9 +25,9 @@ public class TrackDailyEngagementService {
     private static final ZoneId TIMEZONE = ZoneId.of("UTC");
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
-    public void incrementYesToday() {
+    public void incrementYesToday(DimensionType dimension) {
         String today = ZonedDateTime.now(TIMEZONE).format(DATE_FORMATTER);
-        String docId = ENGAGEMENT_DOC_PREFIX + today;
+        String docId = ENGAGEMENT_DOC_PREFIX + today + "_" + dimension.getValue();
 
         Query query = new Query(Criteria.where("_id").is(docId));
         Update update = new Update().inc(YES_COUNT_FIELD, 1);
@@ -44,9 +44,9 @@ public class TrackDailyEngagementService {
         }
     }
 
-    public void incrementNoToday() {
+    public void incrementNoToday(DimensionType dimension) {
         String today = ZonedDateTime.now(TIMEZONE).format(DATE_FORMATTER);
-        String docId = ENGAGEMENT_DOC_PREFIX + today;
+        String docId = ENGAGEMENT_DOC_PREFIX + today + "_" + dimension.getValue();
 
         Query query = new Query(Criteria.where("_id").is(docId));
         Update update = new Update().inc(NO_COUNT_FIELD, 1);
@@ -63,9 +63,9 @@ public class TrackDailyEngagementService {
         }
     }
 
-    public TrackDailyEngagement getTodayEngagement() {
+    public TrackDailyEngagement getTodayEngagement(DimensionType dimension) {
         String today = ZonedDateTime.now(TIMEZONE).format(DATE_FORMATTER);
-        String docId = ENGAGEMENT_DOC_PREFIX + today;
+        String docId = ENGAGEMENT_DOC_PREFIX + today + "_" + dimension.getValue();
 
         return mongoTemplate.findById(docId, TrackDailyEngagement.class);
     }

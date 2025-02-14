@@ -1,5 +1,6 @@
 package com.nivea_be.nivea_ad.service;
 
+import com.nivea_be.nivea_ad.enums.DimensionType;
 import com.nivea_be.nivea_ad.entity.TrackDailyImpression;
 import com.nivea_be.nivea_ad.exception.ImpressionDocumentNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -24,9 +25,9 @@ public class TrackDailyImpressionService {
     private static final ZoneId TIMEZONE = ZoneId.of("UTC");
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
-    public void incrementImpressionToday() {
+    public void incrementImpressionToday(DimensionType dimension) {
         String today = ZonedDateTime.now(TIMEZONE).format(DATE_FORMATTER);
-        String docId = IMPRESSION_DOC_PREFIX + today;
+        String docId = IMPRESSION_DOC_PREFIX + today + "_" + dimension.getValue();
 
         Query query = new Query(Criteria.where("_id").is(docId));
         Update update = new Update().inc(IMPRESSION_COUNT_FIELD, 1);
@@ -43,9 +44,9 @@ public class TrackDailyImpressionService {
         }
     }
 
-    public TrackDailyImpression getTodayImpression() {
+    public TrackDailyImpression getTodayImpression(DimensionType dimension) {
         String today = ZonedDateTime.now(TIMEZONE).format(DATE_FORMATTER);
-        String docId = IMPRESSION_DOC_PREFIX + today;
+        String docId = IMPRESSION_DOC_PREFIX + today + "_" + dimension.getValue();
 
         return mongoTemplate.findById(docId, TrackDailyImpression.class);
     }

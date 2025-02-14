@@ -1,5 +1,6 @@
 package com.nivea_be.nivea_ad.controller;
 
+import com.nivea_be.nivea_ad.enums.DimensionType;
 import com.nivea_be.nivea_ad.entity.TrackDailyImpression;
 import com.nivea_be.nivea_ad.service.TrackDailyImpressionService;
 import lombok.RequiredArgsConstructor;
@@ -20,14 +21,16 @@ public class TrackDailyImpressionController {
     private final TrackDailyImpressionService trackDailyImpressionService;
 
     @PostMapping
-    public ResponseEntity<String> trackTodayImpression() {
-        trackDailyImpressionService.incrementImpressionToday();
+    public ResponseEntity<String> trackTodayImpression(@RequestParam("dimension") String dimension) {
+        DimensionType dimensionType = DimensionType.fromString(dimension);
+        trackDailyImpressionService.incrementImpressionToday(dimensionType);
         return ResponseEntity.ok(IMPRESSION_INCREMENT_SUCCESS);
     }
 
     @GetMapping
-    public ResponseEntity<TrackDailyImpression> getTodayImpressionCount() {
-        TrackDailyImpression count = trackDailyImpressionService.getTodayImpression();
+    public ResponseEntity<TrackDailyImpression> getTodayImpressionCount(@RequestParam("dimension") String dimension) {
+        DimensionType dimensionType = DimensionType.fromString(dimension);
+        TrackDailyImpression count = trackDailyImpressionService.getTodayImpression(dimensionType);
         if (count == null) {
             return ResponseEntity.notFound().build();
         }
