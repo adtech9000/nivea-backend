@@ -1,5 +1,6 @@
 package com.nivea_be.nivea_ad.controller;
 
+import com.nivea_be.nivea_ad.enums.DimensionType;
 import com.nivea_be.nivea_ad.constants.TrackConstants;
 import com.nivea_be.nivea_ad.entity.TrackDailyEngagement;
 import com.nivea_be.nivea_ad.service.TrackDailyEngagementService;
@@ -27,12 +28,14 @@ public class TrackDailyEngagementController {
      * @return a success or error message.
      */
     @PostMapping
-    public ResponseEntity<String> trackEngagement(@RequestParam("response") String response) {
+    public ResponseEntity<String> trackEngagement(@RequestParam("response") String response,
+                                                  @RequestParam("dimension") String dimension) {
+        DimensionType dimensionType = DimensionType.fromString(dimension);
         if (TrackConstants.RESPONSE_YES.equalsIgnoreCase(response)) {
-            trackDailyEngagementService.incrementYesToday();
+            trackDailyEngagementService.incrementYesToday(dimensionType);
             return ResponseEntity.ok(YES_INCREMENT_SUCCESS);
         } else if (TrackConstants.RESPONSE_NO.equalsIgnoreCase(response)) {
-            trackDailyEngagementService.incrementNoToday();
+            trackDailyEngagementService.incrementNoToday(dimensionType);
             return ResponseEntity.ok(NO_INCREMENT_SUCCESS);
         } else {
             return ResponseEntity.badRequest()
@@ -46,8 +49,9 @@ public class TrackDailyEngagementController {
      * @return the counts (yes/no) for the current day.
      */
     @GetMapping
-    public ResponseEntity<TrackDailyEngagement> getTodayEngagementCounts() {
-        TrackDailyEngagement counts = trackDailyEngagementService.getTodayEngagement();
+    public ResponseEntity<TrackDailyEngagement> getTodayEngagementCounts(@RequestParam("dimension") String dimension) {
+        DimensionType dimensionType = DimensionType.fromString(dimension);
+        TrackDailyEngagement counts = trackDailyEngagementService.getTodayEngagement(dimensionType);
         if (counts == null) {
             return ResponseEntity.notFound().build();
         }

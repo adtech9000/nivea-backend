@@ -1,6 +1,7 @@
 package com.nivea_be.nivea_ad.entity;
 
 
+import com.nivea_be.nivea_ad.enums.DimensionType;
 import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -19,5 +20,6 @@ public class TrackDailyImpression {
     private String id;
     private LocalDate date;
     private long impressionCount;
+    private DimensionType dimension;
 }
 
