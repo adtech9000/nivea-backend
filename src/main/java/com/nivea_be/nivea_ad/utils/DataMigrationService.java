@@ -6,37 +6,73 @@ import com.nivea_be.nivea_ad.entity.TrackDailyImpression;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
+
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.logging.Logger;
 
 @Service
 @RequiredArgsConstructor
 public class DataMigrationService {
 
     private final MongoTemplate mongoTemplate;
+    private static final Logger LOGGER = Logger.getLogger(DataMigrationService.class.getName());
+    private static final ZoneId TIMEZONE = ZoneId.of("UTC");
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
+    /**
+     * ✅ Runs once when the application starts to create today's documents for all dimensions.
+     */
     @PostConstruct
-    public void fixOldRecords() {
-        fixOldEngagementRecords();
-        fixOldImpressionRecords();
+    public void initializeDailyDocs() {
+        String today = ZonedDateTime.now(TIMEZONE).format(DATE_FORMATTER);
+        LOGGER.info("🔄 Initializing daily documents for: " + today);
+
+        for (DimensionType dimension : DimensionType.values()) {
+            createDailyEngagementDocIfNotExists(today, dimension);
+            createDailyImpressionDocIfNotExists(today, dimension);
+        }
+
+        LOGGER.info("✅ Initialization completed for: " + today);
     }
 
-    private void fixOldEngagementRecords() {
-        Query query = new Query(Criteria.where("dimension").exists(false));
-        Update update = new Update().set("dimension", DimensionType.DIMENSION_320_480.getValue());
+    private void createDailyEngagementDocIfNotExists(String date, DimensionType dimension) {
+        String docId = "engagement_" + date + "_" + dimension.getValue();
+        TrackDailyEngagement existing = mongoTemplate.findById(docId, TrackDailyEngagement.class);
 
-        mongoTemplate.updateMulti(query, update, TrackDailyEngagement.class);
-        System.out.println("✅ Fixed old engagement records, set dimension=dimension_320_480");
+        if (existing == null) {
+            TrackDailyEngagement newDoc = new TrackDailyEngagement(
+                    docId,
+                    ZonedDateTime.now(TIMEZONE).toLocalDate(),
+                    0L,
+                    0L,
+                    dimension
+            );
+            mongoTemplate.insert(newDoc);
+            LOGGER.info("📌 Created daily engagement doc for " + date + " with dimension " + dimension.getValue());
+        } else {
+            LOGGER.info("⚠️ Engagement document already exists for " + date + " with dimension " + dimension.getValue());
+        }
     }
 
-    private void fixOldImpressionRecords() {
-        Query query = new Query(Criteria.where("dimension").exists(false));
-        Update update = new Update().set("dimension", DimensionType.DIMENSION_320_480.getValue());
+    private void createDailyImpressionDocIfNotExists(String date, DimensionType dimension) {
+        String docId = "impression_" + date + "_" + dimension.getValue();
+        TrackDailyImpression existing = mongoTemplate.findById(docId, TrackDailyImpression.class);
 
-        mongoTemplate.updateMulti(query, update, TrackDailyImpression.class);
-        System.out.println("✅ Fixed old impression records, set dimension=dimension_320_480");
+        if (existing == null) {
+            TrackDailyImpression newDoc = new TrackDailyImpression(
+                    docId,
+                    ZonedDateTime.now(TIMEZONE).toLocalDate(),
+                    0L,
+                    dimension
+            );
+            mongoTemplate.insert(newDoc);
+            LOGGER.info("📌 Created daily impression doc for " + date + " with dimension " + dimension.getValue());
+        } else {
+            LOGGER.info("⚠️ Impression document already exists for " + date + " with dimension " + dimension.getValue());
+        }
     }
 }
 
