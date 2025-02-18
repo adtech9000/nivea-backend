@@ -6,11 +6,10 @@ import com.nivea_be.nivea_ad.entity.TrackDailyImpression;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.logging.Logger;
 
 @Service
@@ -19,60 +18,24 @@ public class DataMigrationService {
 
     private final MongoTemplate mongoTemplate;
     private static final Logger LOGGER = Logger.getLogger(DataMigrationService.class.getName());
-    private static final ZoneId TIMEZONE = ZoneId.of("UTC");
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     /**
-     * ✅ Runs once when the application starts to create today's documents for all dimensions.
+     * ✅ Runs once when the application starts to remove `DIMENSION_320_500` from existing records.
      */
     @PostConstruct
-    public void initializeDailyDocs() {
-        String today = ZonedDateTime.now(TIMEZONE).format(DATE_FORMATTER);
-        LOGGER.info("🔄 Initializing daily documents for: " + today);
+    public void removeInvalidDimension() {
+        LOGGER.info("🔄 Removing invalid dimension: DIMENSION_320_500 from existing records...");
 
-        for (DimensionType dimension : DimensionType.values()) {
-            createDailyEngagementDocIfNotExists(today, dimension);
-            createDailyImpressionDocIfNotExists(today, dimension);
-        }
+        // Remove from Engagement Collection
+        Query engagementQuery = new Query(Criteria.where("dimension").is(DimensionType.DIMENSION_320_500));
+        mongoTemplate.remove(engagementQuery, TrackDailyEngagement.class);
+        LOGGER.info("✅ Removed `DIMENSION_320_500` from engagement collection.");
 
-        LOGGER.info("✅ Initialization completed for: " + today);
-    }
+        // Remove from Impression Collection
+        Query impressionQuery = new Query(Criteria.where("dimension").is(DimensionType.DIMENSION_320_500));
+        mongoTemplate.remove(impressionQuery, TrackDailyImpression.class);
+        LOGGER.info("✅ Removed `DIMENSION_320_500` from impression collection.");
 
-    private void createDailyEngagementDocIfNotExists(String date, DimensionType dimension) {
-        String docId = "engagement_" + date + "_" + dimension.getValue();
-        TrackDailyEngagement existing = mongoTemplate.findById(docId, TrackDailyEngagement.class);
-
-        if (existing == null) {
-            TrackDailyEngagement newDoc = new TrackDailyEngagement(
-                    docId,
-                    ZonedDateTime.now(TIMEZONE).toLocalDate(),
-                    0L,
-                    0L,
-                    dimension
-            );
-            mongoTemplate.insert(newDoc);
-            LOGGER.info("📌 Created daily engagement doc for " + date + " with dimension " + dimension.getValue());
-        } else {
-            LOGGER.info("⚠️ Engagement document already exists for " + date + " with dimension " + dimension.getValue());
-        }
-    }
-
-    private void createDailyImpressionDocIfNotExists(String date, DimensionType dimension) {
-        String docId = "impression_" + date + "_" + dimension.getValue();
-        TrackDailyImpression existing = mongoTemplate.findById(docId, TrackDailyImpression.class);
-
-        if (existing == null) {
-            TrackDailyImpression newDoc = new TrackDailyImpression(
-                    docId,
-                    ZonedDateTime.now(TIMEZONE).toLocalDate(),
-                    0L,
-                    dimension
-            );
-            mongoTemplate.insert(newDoc);
-            LOGGER.info("📌 Created daily impression doc for " + date + " with dimension " + dimension.getValue());
-        } else {
-            LOGGER.info("⚠️ Impression document already exists for " + date + " with dimension " + dimension.getValue());
-        }
+        LOGGER.info("🎯 Dimension cleanup complete!");
     }
 }
-
