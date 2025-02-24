@@ -26,13 +26,15 @@ public class DataMigrationService {
     public void removeInvalidDimension() {
         LOGGER.info("🔄 Removing invalid dimension: DIMENSION_320_500 from existing records...");
 
+        String invalidDimensionValue = "dimension_320_50"; // Hardcoded value
+
         // Remove from Engagement Collection
-        Query engagementQuery = new Query(Criteria.where("dimension").is(DimensionType.DIMENSION_320_500));
+        Query engagementQuery = new Query(Criteria.where("dimension").is(invalidDimensionValue));
         mongoTemplate.remove(engagementQuery, TrackDailyEngagement.class);
         LOGGER.info("✅ Removed `DIMENSION_320_500` from engagement collection.");
 
         // Remove from Impression Collection
-        Query impressionQuery = new Query(Criteria.where("dimension").is(DimensionType.DIMENSION_320_500));
+        Query impressionQuery = new Query(Criteria.where("dimension").is(invalidDimensionValue));
         mongoTemplate.remove(impressionQuery, TrackDailyImpression.class);
         LOGGER.info("✅ Removed `DIMENSION_320_500` from impression collection.");
 
